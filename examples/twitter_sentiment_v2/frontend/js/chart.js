@@ -1,11 +1,10 @@
-var ctx, data, options, myRadarChart;
+var ctx, data, options, myRadarChart, oldLabels;
 
 ctx = document.getElementById("myChart").getContext("2d");
 options = {
     pointLabelFontSize : 18,
     pointLabelFontColor : "#000",
 };
-
 
 data = {
     datasets: [
@@ -43,11 +42,7 @@ function initChart() {
     myRadarChart = new Chart(ctx).Radar(data, options);
 }
 
-console.log(myRadarChart);
-
-function rebuildChart(tweets) {
-    myRadarChart.destroy();
-
+function buildChartData(tweets) {
     var labelIndex = 0;
     var labelIndexes = {};
     var labels = []
@@ -77,27 +72,33 @@ function rebuildChart(tweets) {
         data.datasets[sentimentIndex].data = sentimentCount;
     }
 
+    oldLabels = data.labels;
     data.labels = labels;
 
+    writeChart(data);
+}
+
+function rebuildChart(data) {
+    myRadarChart.destroy();
     myRadarChart = new Chart(ctx).Radar(data, options);
 }
 
-function updateChart(chartData) {
-    for (var i = 0, l=chartData.data.length; i < l; i++) {
-        for (var a = 0, b=chartData.data[i].length; a < b; a++) {
-            myRadarChart.datasets[i].points[a].value = chartData.data[i][a];
+function updateChart(data) {
+    for (var i = 0, l=data.datasets.length; i < l; i++) {
+        for (var a = 0, b=data.datasets[i].data.length; a < b; a++) {
+            myRadarChart.datasets[i].points[a].value = data.datasets[i].data[a];
         }
     }
     myRadarChart.update();
 }
 
-function checkLabels(newLabels) {
-    if (data.labels.length != newLabels.length) {
+function checkLabels() {
+    if (data.labels.length != oldLabels.length) {
         return false;
     }
 
-    for (var i = 0, l=labels.length; i < l; i++) {
-        if (labels[i] != newLabels[i]) {
+    for (var i = 0, l=data.labels.length; i < l; i++) {
+        if (data.labels[i] != oldLabels[i]) {
             return false;
         }
     }
@@ -105,11 +106,11 @@ function checkLabels(newLabels) {
     return true;
 }
 
-function writeChart(chartData) {
-    if(!checkLabels(chartData.labels)) {
-        rebuildChart(chartData);
+function writeChart(data) {
+    if(!checkLabels(data.labels)) {
+        rebuildChart(data);
     } else {
-        updateChart(chartData);
+        updateChart(data);
     }
 }
 
